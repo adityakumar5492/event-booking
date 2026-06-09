@@ -2,6 +2,8 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import api from '../utils/axios';
 import { useNavigate } from 'react-router-dom';
+import EventImage from '../components/EventImage';
+import { validateImageUrl, isIndirectImageUrl } from '../utils/validateImageUrl';
 
 const AdminDashboard = () => {
     const { user } = useContext(AuthContext);
@@ -14,6 +16,7 @@ const AdminDashboard = () => {
     const [formData, setFormData] = useState({
         title: '', description: '', date: '', location: '', category: '', totalSeats: '', ticketPrice: '', image: ''
     });
+    const [imageValidation, setImageValidation] = useState({ valid: true, reason: '' });
 
     useEffect(() => {
         if (!user || user.role !== 'admin') {
@@ -135,7 +138,47 @@ const AdminDashboard = () => {
                         <input required type="number" placeholder="Ticket Price (0 for free)" className="border px-4 py-3 rounded-lg focus:ring-2 focus:ring-gray-700 outline-none transition" value={formData.ticketPrice} onChange={e => setFormData({ ...formData, ticketPrice: e.target.value })} />
 
                         <div className="md:col-span-2">
-                            <input type="text" placeholder="Image URL (Provide any direct link to an image)" className="w-full border px-4 py-3 rounded-lg focus:ring-2 focus:ring-gray-700 outline-none transition" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} />
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Image URL</label>
+                            <input
+                                type="text"
+                                placeholder="Paste a direct image link (e.g., Unsplash, Pexels, Imgur)"
+                                className={`w-full border px-4 py-3 rounded-lg focus:ring-2 outline-none transition ${imageValidation.valid ? 'focus:ring-gray-700 border-gray-300' : 'border-red-400 focus:ring-red-300'}`}
+                                value={formData.image}
+                                onChange={e => {
+                                    const val = e.target.value;
+                                    setFormData({ ...formData, image: val });
+                                    if (val.trim()) {
+                                        const check = validateImageUrl(val);
+                                        if (check.valid && isIndirectImageUrl(val)) {
+                                            setImageValidation({ valid: false, reason: 'This looks like a sharing link (Google Drive/Dropbox/OneDrive). Please use a direct image URL instead.' });
+                                        } else {
+                                            setImageValidation(check);
+                                        }
+                                    } else {
+                                        setImageValidation({ valid: true, reason: '' });
+                                    }
+                                }}
+                            />
+                            {!imageValidation.valid && (
+                                <p className="text-red-500 text-xs mt-1.5 font-medium">⚠️ {imageValidation.reason}</p>
+                            )}
+                            {imageValidation.valid && formData.image && isIndirectImageUrl(formData.image) && (
+                                <p className="text-red-500 text-xs mt-1.5 font-medium">⚠️ Sharing links (Google Drive / Dropbox / OneDrive) won’t render. Use a direct image URL.</p>
+                            )}
+
+                            {/* Live Preview */}
+                            {formData.image && (
+                                <div className="mt-4">
+                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Preview</p>
+                                    <div className="w-full h-48 rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
+                                        <EventImage
+                                            src={formData.image}
+                                            alt="Event preview"
+                                            fallbackText="Preview"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <textarea required placeholder="Event Description" className="border px-4 py-3 rounded-lg md:col-span-2 h-32 focus:ring-2 focus:ring-gray-700 outline-none transition" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />

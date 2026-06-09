@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/axios';
 import { AuthContext } from '../context/AuthContext';
+import EventImage from '../components/EventImage';
 import { FaCalendarAlt, FaMapMarkerAlt, FaChair, FaMoneyBillWave } from 'react-icons/fa';
 
 const EventDetail = () => {
@@ -65,13 +66,14 @@ const EventDetail = () => {
 
     return (
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden mt-8">
-            {event.image ? (
-                <img src={event.image} alt={event.title} className="w-full h-80 object-cover" />
-            ) : (
-                <div className="w-full h-64 bg-gray-900 flex items-center justify-center text-white/50 text-6xl font-black uppercase tracking-widest">
-                    {event.category}
-                </div>
-            )}
+            <div className="w-full h-80">
+                <EventImage
+                    src={event.image}
+                    alt={event.title}
+                    fallbackText={event.category || 'Event'}
+                    fallbackClassName="bg-gray-900 text-white/50 text-6xl font-black uppercase tracking-widest"
+                />
+            </div>
 
             <div className="p-8 md:p-12">
                 <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6">
